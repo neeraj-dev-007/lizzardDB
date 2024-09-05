@@ -10,7 +10,7 @@ import (
 )
 
 func Start() { //Start the REPL loop
-	store :=  storage.NewKeyValueStore()
+	db :=  storage.NewDatabase()
 	reader := bufio.NewReader((os.Stdin))
 
 	fmt.Println("Welcome to LizzardDB!")
@@ -27,29 +27,40 @@ func Start() { //Start the REPL loop
 		command, args := parser.ParseCommand(input)
 
 		switch command {
-		case "INSERT": 
-			if (len(args) == 2) {
-				store.Insert(args[0], args[1])
+		case "CREATE": 
+			if (len(args)>=2 && args[0] == "TABLE") {
+				name := args[1]
+				columns := []storage.Column{
+					{Name: "id", Type: "INT"},
+					{Name: "name", Type: "VARCHAR"},
+				}
+				db.Create(name, columns)
 			} else {
-				fmt.Println("Usage: INSERT <key> <value>")
+				fmt.Println("Usage: CREATE TABLE <tableName>")
+			}
+		case "INSERT": 
+			if (len(args)>=2 && args[0] == "INTO") {
+				name := args[1]
+				row := map[string]interface{}{
+					"id": 1,
+					"name": "Harvey Specter",
+				}
+				db.Insert(name, row)
+			} else {
+				fmt.Println("Usage: INSERT INTO <tableName>")
 			}
 		case "SELECT":
-			if (len(args) == 1) {
-				store.Select(args[0])
+			if (len(args)>=2 && args[0] == "*") {
+				name := args[2]
+				db.Select(name)
 			} else {
-				fmt.Println("Usage: SELECT <key>")
-			}
-		case "DELETE": 
-			if (len(args) == 1) {
-				store.Delete(args[0])
-			} else {
-				fmt.Println("Usage: DELETE <key>")
+				fmt.Println("Usage: SELECT * FROM <tableName>")
 			}
 		case "EXIT": 
 			fmt.Println("Thanks for using LizzardDB!")
 			os.Exit(0)
 		default: 
-			fmt.Println("Unknown command. Available commands: INSERT, SELECT, DELETE and EXIT")
+			fmt.Println("Unknown command. Available commands: CREATE, INSERT, SELECT and EXIT")
 		}
 	}
 }

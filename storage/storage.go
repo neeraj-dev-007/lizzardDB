@@ -2,34 +2,50 @@ package storage
 
 import "fmt"
 
-type KeyValueStore struct {
-	store map[string]string
+type Column struct {
+	Name string
+	Type string
 }
 
-func NewKeyValueStore() *KeyValueStore {
-	return &KeyValueStore{store: make(map[string]string)}
+type Table struct {
+	Name string
+	Columns []Column
+	Rows []map[string]interface{} //interface{} because value can be of any type
 }
 
-func (kv *KeyValueStore) Insert(key, value string) {
-	kv.store[key] = value
-	fmt.Println("Inserted: ", key, value)
+type Database struct {
+	Tables map[string]*Table
 }
 
-func (kv *KeyValueStore) Select(key string) {
-	value, exists := kv.store[key]
-	if(exists) {
-		fmt.Println("Value: ", value)
-	} else{
-		fmt.Println("Key not found")
+func NewDatabase() *Database {
+	return &Database{Tables: make(map[string]*Table)}
+}
+
+func (db *Database) Create(name string, columns []Column) {
+	db.Tables[name] = &Table{
+		Name: name, Columns: columns, Rows: []map[string]interface{}{},
+	}
+	fmt.Println("Table", name, "created")
+}
+
+func (db *Database) Insert(name string, row map[string]interface{}) {
+	table, exists := db.Tables[name]
+	if (exists) {
+		table.Rows = append(table.Rows, row)
+		fmt.Println("Inserted row into", name)
+	} else {
+		fmt.Println("Table", name, "doesn't exist")
 	}
 }
 
-func (kv *KeyValueStore) Delete(key string) {
-	_, exists := kv.store[key]
-	if(exists) {
-		delete(kv.store, key)
-		fmt.Println("Deleted: ", key)
+func (db *Database) Select(name string) {
+	table, exists := db.Tables[name]
+	if (exists) {
+		fmt.Println("Rows in", name)
+		for _, row := range table.Rows {
+			fmt.Println(row)
+		}
 	} else {
-		fmt.Println("Key not found")
+		fmt.Println("Table", name, "doesn't exist")
 	}
 }
